@@ -1,0 +1,29 @@
+{{define "title"}}Fighters{{end}}
+
+{{define "main"}}
+    <h2>Latest Fighters</h2>
+    {{if .Fighters}}
+     <table>
+        <tr>
+            <th>Name</th>
+            <th>Wrestling</th>
+            <th>Striking</th>
+            <th>Stamina</th>
+            <th>Created</th>
+            <th>ID</th>
+        </tr>
+        {{range .Fighters}}
+        <tr>
+            <td>{{.Name}}</td>
+            <td>{{.Wrestling}}</td>
+            <td>{{.Striking}}</td>
+            <td>{{.Stamina}}</td>
+            <td>{{humanDate .Created}}</td>
+            <td>#{{.ID}}</td>
+        </tr>
+        {{end}}
+    </table>
+    {{else}}
+        <p>There are no fighters available.</p>
+    {{end}}
+{{end}}
