@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -22,49 +23,147 @@ type fighterCreateForm struct {
 	validator.Validator `form:"-"`
 }
 
-func (app *application) fighterCreate(w http.ResponseWriter, r *http.Request) {
-	data := app.newTemplateData(r)
-	data.Form = fighterCreateForm{}
-	app.render(w, http.StatusOK, "create_fighter.tmpl", data)
+func (app *application) fighterUpdatePost(w http.ResponseWriter, r *http.Request) {
+	if !app.isAuthenticated(r) {
+		http.Redirect(w, r, "/fighters", http.StatusSeeOther)
+		return
+	}
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+	}
+
+	var form fighterCreateForm
+	err = app.decodePostForm(r, &form)
+
+	if err != nil {
+		app.serverError(w, err)
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validator.NotBlank(form.Name), "name", "Name can't be empty nigga")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusOK, "update_fighter.tmpl", data)
+		return
+	}
+
+	_, err = app.fighters.Update(id, form.Name, form.Wrestling, form.Striking, form.Stamina)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			app.sessionManager.Put(r.Context(), "flash", "Что то пошло не так")
+			http.Redirect(w, r, fmt.Sprintf("/fighter/update/%d", id), http.StatusSeeOther)
+			// No fighter with the given ID found
+			return
+		}
+		app.serverError(w, err) // Other error occurred
+		return
+	}
+
+	http.Redirect(w, r, "/fighters", http.StatusSeeOther)
+
 }
 
-func (app *application) fighterCreatePost(w http.ResponseWriter, r *http.Request) {
-	var form fighterCreateForm
+func (app *application) fighterUpdate(w http.ResponseWriter, r *http.Request) {
+	if !app.isAuthenticated(r) {
+		http.Redirect(w, r, "/fighters", http.StatusSeeOther)
+		return
+	}
 
-	err := app.decodePostForm(r, &form)
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+	}
+	fighter, err := app.fighters.Get(id)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			app.notFound(w)
+			return
+		}
+		app.serverError(w, err)
+	}
+
+	data := app.newTemplateData(r)
+	data.Fighter = fighter
+	app.render(w, http.StatusOK, "update_fighter.tmpl", data)
+}
+
+func (app *application) fighterDelete(w http.ResponseWriter, r *http.Request) {
+
+	if !app.isAuthenticated(r) {
+		app.sessionManager.Put(r.Context(), "flash", "You are not logged")
+		http.Redirect(w, r, "/fighters", http.StatusSeeOther)
+		return
+	}
+
+	params := httprouter.ParamsFromContext(r.Context())
+	id, err := strconv.Atoi(params.ByName("id"))
+
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
-	// Add validation checks for other fields if required
+	err = app.fighters.Delete(id)
+
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	app.sessionManager.Put(r.Context(), "flash", "Deleted Sucessfully")
+	http.Redirect(w, r, "/fighters", http.StatusSeeOther)
+}
+
+func (app *application) fighterCreate(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = fighterCreateForm{}
+	app.render(w, http.StatusOK, "create_fighters.tmpl", data)
+}
+
+func (app *application) fighterCreatePost(w http.ResponseWriter, r *http.Request) {
+	var form fighterCreateForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	form.CheckField(validator.NotBlank(form.Name), "name", "This Field cannot be blank")
 
 	if !form.Valid() {
 		data := app.newTemplateData(r)
 		data.Form = form
-		app.render(w, http.StatusUnprocessableEntity, "create_fighter.tmpl", data)
+		app.render(w, http.StatusUnprocessableEntity, "create_fighters.tmpl", data)
 		return
 	}
 
-	// Insert the new fighter into the database
 	_, err = app.fighters.Insert(form.Name, form.Wrestling, form.Striking, form.Stamina)
+
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
 
-	// Redirect to a success page or any other desired destination
+	app.sessionManager.Put(r.Context(), "flash", "fighter sucessfully created")
+
 	http.Redirect(w, r, "/fighters", http.StatusSeeOther)
+
 }
 
-func (app *application) fightersList(w http.ResponseWriter, r *http.Request) {
+func (app *application) showfighterList(w http.ResponseWriter, r *http.Request) {
 	fighters, err := app.fighters.Latest()
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-
 	data := app.newTemplateData(r)
 	data.Fighters = fighters
 	app.render(w, http.StatusOK, "fighter.tmpl", data)

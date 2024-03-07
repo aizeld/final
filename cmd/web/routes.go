@@ -50,10 +50,12 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodPost, "/account/password/update", protected.ThenFunc(app.accountPasswordUpdatePost))
 	router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.userLogoutPost))
 
-	router.Handler(http.MethodGet, "/fighters", dynamic.ThenFunc(app.fightersList))
-	router.Handler(http.MethodGet, "/fighter/create", protected.ThenFunc(app.fighterCreate))
-	router.Handler(http.MethodPost, "/fighter/create", protected.ThenFunc(app.fighterCreatePost))
-
+	router.Handler(http.MethodGet, "/fighters", dynamic.ThenFunc(app.showfighterList))
+	router.Handler(http.MethodGet, "/fighters/create", protected.ThenFunc(app.fighterCreate))
+	router.Handler(http.MethodPost, "/fighters/create", protected.ThenFunc(app.fighterCreatePost))
+	router.Handler(http.MethodGet, "/fighters/delete/:id", dynamic.ThenFunc(app.fighterDelete))
+	router.Handler(http.MethodGet, "/fighter/update/:id", dynamic.ThenFunc(app.fighterUpdate))
+	router.Handler(http.MethodPost, "/fighter/update/:id", protected.ThenFunc((app.fighterUpdatePost)))
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
 	return standard.Then(router)
 }

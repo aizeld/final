@@ -8,9 +8,10 @@
             <a href='/snippet/create'>Create snippet</a>
         {{end}}
         <a href= '/fighters'>  fighter</a>
-    </div>
-    <div>
-        {{if .IsAuthenticated}}
+         {{if .IsAuthenticated}}
+            <a href='/fighters/create'>Create Fighter</a>
+        {{end}}
+            {{if .IsAuthenticated}}
         <a href='/account/view'>Account</a>
             <form action='/user/logout' method='POST'>
                 <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
@@ -21,5 +22,6 @@
             <a href='/user/login'>Login</a>
         {{end}}
     </div>
+   
 </nav>
 {{end}}

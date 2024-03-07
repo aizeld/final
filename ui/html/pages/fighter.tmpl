@@ -14,12 +14,15 @@
         </tr>
         {{range .Fighters}}
         <tr>
-            <td>{{.Name}}</td>
+            <td> <a href="/fighter/update/{{.ID}}">{{.Name}}</td>
             <td>{{.Wrestling}}</td>
             <td>{{.Striking}}</td>
             <td>{{.Stamina}}</td>
             <td>{{humanDate .Created}}</td>
             <td>#{{.ID}}</td>
+      
+            <td><a href='/fighters/delete/{{.ID}}'>Delete</a></td>
+   
         </tr>
         {{end}}
     </table>

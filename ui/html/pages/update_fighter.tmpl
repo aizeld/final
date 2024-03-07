@@ -1,0 +1,29 @@
+{{define "title"}}Update Fighter{{end}}
+
+{{define "main"}}
+<form action='/fighter/update/{{.Fighter.ID}}' method='POST'>
+    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
+    <div>
+        <label>Name:</label>
+        <input type='text' name='name' value='{{.Fighter.Name}}'>
+    </div>
+    <div>
+        <label>Wrestling:</label>
+       
+        <input type='number' name='wrestling' value='{{.Fighter.Wrestling}}'>
+    </div>
+    <div>
+        <label>Striking:</label>
+       
+        <input type='number' name='striking' value='{{.Fighter.Striking}}'>
+    </div>
+    <div>
+        <label>Stamina:</label>
+      
+        <input type='number' name='stamina' value='{{.Fighter.Stamina}}'>
+    </div>
+    <div>
+        <input type='submit' value='Update Fighter'>
+    </div>
+</form>
+{{end}}

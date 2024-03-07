@@ -65,6 +65,7 @@ func main() {
 		debug:          *debug,
 		errorLog:       errorLog,
 		infoLog:        infoLog,
+		fighters:       &models.FighterModel{DB: db},
 		snippets:       &models.SnippetModel{DB: db},
 		users:          &models.UserModel{DB: db},
 		templateCache:  templateCache,
