@@ -1,4 +1,4 @@
-# Source code of Let's Go Professional
+# CRUD operations on fighters stuff
 
-Book URL: https://lets-go.alexedwards.net/
+
 

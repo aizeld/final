@@ -13,7 +13,7 @@ import (
 )
 
 func (app *application) newTemplateData(r *http.Request) *templateData {
-	return &templateData{
+	return &templateData{ //return template data(for rendering templates)
 		CurrentYear:     time.Now().Year(),
 		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated: app.isAuthenticated(r),
@@ -22,41 +22,41 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 }
 
 func (app *application) clientError(w http.ResponseWriter, status int) {
-	http.Error(w, http.StatusText(status), status)
+	http.Error(w, http.StatusText(status), status) // handle client errors
 }
 
 func (app *application) notFound(w http.ResponseWriter) {
-	app.clientError(w, http.StatusNotFound)
+	app.clientError(w, http.StatusNotFound) // wrap for clientErr
 }
 
 func (app *application) render(w http.ResponseWriter, status int, page string, data *templateData) {
-	ts, ok := app.templateCache[page]
+	ts, ok := app.templateCache[page] // check if the template exists
 	if !ok {
-		err := fmt.Errorf("the template %s does not exist", page)
+		err := fmt.Errorf("the template %s does not exist", page) // throw error if the template does not exist
 		app.serverError(w, err)
 		return
 	}
-	buf := new(bytes.Buffer)
-	err := ts.ExecuteTemplate(buf, "base", data)
+	buf := new(bytes.Buffer) // create a new buffer for the template
+	err := ts.ExecuteTemplate(buf, "base", data) // execute the template 
 	if err != nil {
-		app.serverError(w, err)
+		app.serverError(w, err) // throw server error if the template cannot be executed
 		return
 	}
-	w.WriteHeader(status)
-	buf.WriteTo(w)
+	w.WriteHeader(status) // write the status code
+	buf.WriteTo(w) // write the buffer to the response writer
 }
 
-func (app *application) decodePostForm(r *http.Request, dst any) error {
+func (app *application) decodePostForm(r *http.Request, dst any) error { // decoder method
 
-	err := r.ParseForm()
+	err := r.ParseForm() // parsing post form
 	if err != nil {
 		return err
 	}
 
-	err = app.formDecoder.Decode(dst, r.PostForm)
+	err = app.formDecoder.Decode(dst, r.PostForm) // decoding post form
 	if err != nil {
 
-		var invalidDecoderError *form.InvalidDecoderError
+		var invalidDecoderError *form.InvalidDecoderError // checking for invalid decoder error
 
 		if errors.As(err, &invalidDecoderError) {
 			panic(err)
@@ -69,7 +69,7 @@ func (app *application) decodePostForm(r *http.Request, dst any) error {
 }
 
 func (app *application) isAuthenticated(r *http.Request) bool {
-	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+	isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool) // checking if the user is authenticated
 	if !ok {
 		return false
 	}
@@ -77,8 +77,8 @@ func (app *application) isAuthenticated(r *http.Request) bool {
 	return isAuthenticated
 }
 
-func (app *application) serverError(w http.ResponseWriter, err error) {
-	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
+func (app *application) serverError(w http.ResponseWriter, err error) { // server error handler
+	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack()) // format stack trace response string
 	app.errorLog.Output(2, trace)
 
 	if app.debug {
